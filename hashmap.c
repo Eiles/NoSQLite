@@ -30,6 +30,28 @@ uint32_t hashmap_hash(char* key)
     return hash;
 }
 
+void hashmap_project(hashmap_node_t* result, char** argv, int argc){
+    int i;
+    int found=0;
+    while(result!=NULL){
+        for(i=0;i<argc;i++){
+            list_value_t* record = result->lt->record;
+            while (record!=NULL) {
+                if(strcmp(argv[i],record->key)==0){
+                    value_print_value(record);
+                    found=1;
+                }
+                record=record->next;
+            }
+            printf("\t");
+        }
+        if(found){
+            printf("\n");
+            found=0;
+        }
+        result=result->next;
+    }
+}
 
 
 hashmap_t* hashmap_create(){
@@ -56,25 +78,41 @@ void hashmap_set(hashmap_t *map, hashmap_node_t* node){
 }
 
 hashmap_node_t* hashmap_find(hashmap_t* hashmap,char *key){
-    uint32_t hash=hashmap_hash(key);
-    hashmap_node_t* bucket=*hashmap_get_bucket(hashmap, hash);
-    hashmap_node_t* result=NULL;
     int create=1;
-    if(bucket==NULL)
-        return bucket;
-    else{
-        while(bucket!=NULL){
-            if(bucket->hash==hash && strcmp(key,bucket->lt->key)==0){
+    hashmap_node_t* result=NULL;
+    if(strlen(key)==0){
+        int i;
+        for(i=0;i<BUCKET_NUMBER;i++){
+            hashmap_node_t* tmp=hashmap->map[i];
+            while (tmp!=NULL) {
                 if(create){
-                    result=hashmap_node_create(hash, bucket->lt);
+                    result=hashmap_node_create(0, tmp->lt);
                     create=0;
                 }else
-                    hashmap_node_append_node(result, hashmap_node_create(hash, bucket->lt));
+                    hashmap_node_append_node(result, hashmap_node_create(0, tmp->lt));
+                tmp=tmp->next;
             }
-            bucket=bucket->next;
         }
+        return result;
+    }else{
+        uint32_t hash=hashmap_hash(key);
+        hashmap_node_t* bucket = *hashmap_get_bucket(hashmap, hash);
+        if(bucket==NULL)
+            return bucket;
+        else{
+            while(bucket!=NULL){
+                if(bucket->hash==hash && strcmp(key,bucket->lt->key)==0){
+                    if(create){
+                        result=hashmap_node_create(hash, bucket->lt);
+                        create=0;
+                    }else
+                        hashmap_node_append_node(result, hashmap_node_create(hash, bucket->lt));
+                }
+                bucket=bucket->next;
+            }
+        }
+        return result;
     }
-    return result;
 }
 
 hashmap_node_t** hashmap_get(hashmap_t* map, char *key)

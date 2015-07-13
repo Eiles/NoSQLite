@@ -12,7 +12,6 @@
 
 int main(int argc, const char * argv[]) {
     hashmap_t* hashmap = hashmap_create();
-    int j,k;
     char* val;
     hashmap_node_t* node=NULL;
     double d = 10.5;
@@ -23,7 +22,7 @@ int main(int argc, const char * argv[]) {
     val=malloc(sizeof(i));
     memcpy(val, &i, sizeof(i));
     list_value_append(list, "grade",val, INT_TYPE);
-    list_value_append(list, "machin", "Bite", STRING_TYPE);
+    list_value_append(list, "name", "Elie", STRING_TYPE);
     list_value_t* tmp=list;
     hashmap_node_t* tmp_node = NULL;
     while(tmp!=NULL){
@@ -40,7 +39,7 @@ int main(int argc, const char * argv[]) {
     val=malloc(sizeof(i));
     memcpy(val, &i, sizeof(i));
     list_value_append(list, "grade",val, INT_TYPE);
-    list_value_append(list, "truc", "Bite", STRING_TYPE);
+    list_value_append(list, "name", "Tom", STRING_TYPE);
     tmp=list;
     tmp_node = NULL;
     while(tmp!=NULL){
@@ -49,21 +48,13 @@ int main(int argc, const char * argv[]) {
         tmp=tmp->next;
     }
     
-    for(i=0;i<BUCKET_NUMBER;i++){
-        if(hashmap->map[i]!=NULL){
-            printf("%"PRIu32"\n",hashmap->map[i]->hash);
-        }
-    }
     
-    node=hashmap_find(hashmap, "grade");
-    while(node!=NULL){
-        value_print(node->lt);
-        printf("\nFrom record : ");
-        list_print(node->lt->record);
-        printf("\n");
-        if(node->lt->record)
-        node=node->next;
-    }
+    node=hashmap_find(hashmap, "Elie");
+    char* args[2];
+    args[0]="grade";
+    args[1]="name";
+    hashmap_project(node, args, 2);
+    
     hashmap_destroy(hashmap);
     return 0;
 }

@@ -35,4 +35,5 @@ void list_print(list_value_t* list);
 
 void list_value_destroy(list_value_t* list);
 
+void value_print_value(list_value_t* list);
 #endif /* defined(__NoSQLite__list_value__) */

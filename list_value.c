@@ -71,6 +71,27 @@ void value_print(list_value_t* list){
     }
 }
 
+void value_print_value(list_value_t* list){
+    if (list == NULL)
+        return;
+    
+    int intval;
+    double doubleval;
+    switch (list->type) {
+        case INT_TYPE:
+            memcpy(&intval,list->value, sizeof(int));
+            printf("%d", intval);
+            break;
+        case DOUBLE_TYPE:
+            memcpy(&doubleval,list->value, sizeof(double));
+            printf("%lf", doubleval);
+            break;
+        case STRING_TYPE:
+            printf("%s",list->value);
+            break;
+    }
+}
+
 void list_print(list_value_t* list){
     printf("{ ");
     while(list != NULL){
@@ -80,6 +101,7 @@ void list_print(list_value_t* list){
     }
      printf("}");
 }
+
 
 void list_value_destroy(list_value_t* list){
     list_value_t* tmp=NULL;
