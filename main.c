@@ -17,7 +17,7 @@ int main(int argc, const char * argv[]) {
     char* args[2];
     
     node=hashmap_find(hashmap, "grade");
-    hashmap_where(&node,"{machin:13}");
+    hashmap_where(&node,"{grade:13}");
     
     args[0]="grade";
     hashmap_project(node, args, 1);

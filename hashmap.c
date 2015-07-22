@@ -10,45 +10,66 @@
 #include "hashmap_node.h"
 #include "record_list.h"
 
-//int value_compare(list_value_t* a, list_value_t* b){
-//    if(a->type==b->type)
-//        return compare(a,b);
-//    
-//    if(a->type==STRING_TYPE)
-//        return -1;
-//    else
-//        if (b->type==STRING_TYPE)
-//            return 1;
-//        else
-//            return (compare(a,b));
-//}
-
-//int compare(list_value_t* avalue, list_value_t* bvalue){
-//    if(avalue->type==STRING_TYPE)
-//        return strcmp(avalue->value,bvalue->value);
-//    
-//    if(a<b)
-//        return 1;
-//    else{
-//        if(a>b){
-//            return -1;
-//        }else{
-//            return 0;
-//        }
-//    }
-//}
-
-void char_to_double(char* value,void *toconvert){
-    double converted;
-    double* todouble;
-    memcpy(&converted, value, sizeof(double));
-    todouble=&converted;
-    toconvert=todouble;
+int value_compare(list_value_t* a, list_value_t* b){
+    if(a->type==b->type)
+        return compare(a,b);
+    
+    if(a->type==STRING_TYPE)
+        return -1;
+    else
+        if (b->type==STRING_TYPE)
+            return 1;
+        else
+            return (compare(a,b));
+}
+void* convert_value(list_value_t* value){
+    if(value->type==DOUBLE_TYPE){
+        double d;
+        double* dp=malloc(sizeof(double));
+        memcpy(&d,value->value, sizeof(double));
+        *dp=d;
+        return dp;
+    }
+    if(value->type==INT_TYPE){
+        int i;
+        int* ip=malloc(sizeof(int));
+        memcpy(&i,value->value, sizeof(int));
+        *ip=i;
+        return ip;
+    }
+    else{
+        return value->value;
+    }
 }
 
-//int char_to_int(){
-//    
-//}
+int compare(list_value_t* avalue, list_value_t* bvalue){
+    if(avalue->type==STRING_TYPE)
+        return strcmp(avalue->value,bvalue->value);
+    
+    if((avalue->type==DOUBLE_TYPE?*(double*)convert_value(avalue):*(int*)convert_value(avalue)) > (bvalue->type==DOUBLE_TYPE?*(double*)convert_value(bvalue):*(int*)convert_value(bvalue))){
+        value_print(avalue);
+        printf(">");
+        value_print(bvalue);
+        printf("\n");
+        return 1;
+    }
+    else{
+        if((avalue->type==DOUBLE_TYPE?*(double*)convert_value(avalue):*(int*)convert_value(avalue)) < (bvalue->type==DOUBLE_TYPE?*(double*)convert_value(bvalue):*(int*)convert_value(bvalue))){
+            value_print(avalue);
+            printf("<");
+            value_print(bvalue);
+            printf("\n");
+           return -1;
+        }else{
+            value_print(avalue);
+            printf("==");
+            value_print(bvalue);
+            printf("\n");
+            return 0;
+        }
+    }
+}
+
 
 uint32_t hashmap_hash(char* key){
     size_t len = strlen(key);
@@ -104,7 +125,7 @@ void hashmap_where(hashmap_node_t** result, char *string){
         while(tmpw!=NULL){
             tmprec=current->lt->record;
             while (tmprec!=NULL) {
-                if(strcmp(tmpw->key,tmprec->key)==0){ //&& value_compare(tmpw, tmprec)==0){
+                if(strcmp(tmpw->key,tmprec->key)==0 && value_compare(tmpw, tmprec) == 0){
                     found=1;
                 }
                 tmprec=tmprec->next;
