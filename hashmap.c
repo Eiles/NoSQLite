@@ -47,24 +47,12 @@ int compare(list_value_t* avalue, list_value_t* bvalue){
         return strcmp(avalue->value,bvalue->value);
     
     if((avalue->type==DOUBLE_TYPE?*(double*)convert_value(avalue):*(int*)convert_value(avalue)) > (bvalue->type==DOUBLE_TYPE?*(double*)convert_value(bvalue):*(int*)convert_value(bvalue))){
-        value_print(avalue);
-        printf(">");
-        value_print(bvalue);
-        printf("\n");
         return 1;
     }
     else{
         if((avalue->type==DOUBLE_TYPE?*(double*)convert_value(avalue):*(int*)convert_value(avalue)) < (bvalue->type==DOUBLE_TYPE?*(double*)convert_value(bvalue):*(int*)convert_value(bvalue))){
-            value_print(avalue);
-            printf("<");
-            value_print(bvalue);
-            printf("\n");
            return -1;
         }else{
-            value_print(avalue);
-            printf("==");
-            value_print(bvalue);
-            printf("\n");
             return 0;
         }
     }
@@ -175,7 +163,10 @@ void hashmap_set(hashmap_t *map, hashmap_node_t* node){
     }
 }
 
-hashmap_node_t* hashmap_find(hashmap_t* hashmap,char *key){
+hashmap_node_t* hashmap_find(hashmap_t* hashmap,char *string){
+    char* key;
+    list_value_t* find=JSON_parse(string);
+    key=find->key;
     int create=1;
     hashmap_node_t* result=NULL;
     if(strlen(key)==0){
@@ -199,7 +190,7 @@ hashmap_node_t* hashmap_find(hashmap_t* hashmap,char *key){
             return bucket;
         else{
             while(bucket!=NULL){
-                if(bucket->hash==hash && strcmp(key,bucket->lt->key)==0){
+                if(bucket->hash==hash && strcmp(key,bucket->lt->key)==0 && value_compare(find, bucket->lt)==0){
                     if(create){
                         result=hashmap_node_create(hash, bucket->lt);
                         create=0;
@@ -424,4 +415,5 @@ void hashmap_save(hashmap_t* hashmap,char* db){
         writeDB(&file,recordlist->record);
         recordlist=recordlist->next;
     }
+    fclose(file);
 }

@@ -45,4 +45,6 @@ hashmap_t* hashmap_load(char * db);
 void hashmap_save(hashmap_t* hashmap,char* db);
 
 void hashmap_where(hashmap_node_t** result, char *string);
+
+void hashmap_add_list(hashmap_t* hashmap, list_value_t* lt);
 #endif /* defined(__NoSQLite__hashmap__) */
