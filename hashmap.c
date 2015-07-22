@@ -8,6 +8,7 @@
 
 #include "hashmap.h"
 #include "hashmap_node.h"
+#include "record_list.h"
 
 //int value_compare(list_value_t* a, list_value_t* b){
 //    if(a->type==b->type)
@@ -92,7 +93,6 @@ void hashmap_project(hashmap_node_t* result, char** argv, int argc){
 }
 
 void hashmap_where(hashmap_node_t** result, char *string){
-    int i=0;
     int found=0;
     hashmap_node_t* prev=NULL;
     hashmap_node_t* current=*result;
@@ -355,3 +355,52 @@ int JSON_extract_value(char* string, char** valuepointer){
     }
 }
 
+hashmap_t* hashmap_load(char * db){
+    hashmap_t* hashmap=hashmap_create();
+    FILE* fp;
+    size_t len = 0;
+    ssize_t read;
+    char* line=NULL;
+    fp = fopen(db, "r");
+    if (fp == NULL)
+        return NULL;
+    
+    while ((read = getline(&line, &len, fp)) != -1) {
+        if (line[read - 1] == '\n')
+            line[read - 1] = '\0';
+        list_value_t* addlist=JSON_parse(line);
+        hashmap_add_list(hashmap,addlist);
+    }
+    fclose(fp);
+    if (line)
+        free(line);
+    return hashmap;
+}
+
+void hashmap_save(hashmap_t* hashmap,char* db){
+    hashmap_node_t* tmpnode;
+    FILE* file=NULL;
+    file=fopen(db, "w");
+    int i;
+    int create=1;
+    record_list_t* recordlist=NULL;
+    record_list_t* tmprecordlist=NULL;
+    for(i=0;i<BUCKET_NUMBER;i++){
+        tmpnode=hashmap->map[i];
+        while(tmpnode!=NULL){
+            if(create){
+                recordlist=record_list_create(&(tmpnode->lt->record));
+                create=0;
+            }else{
+                if((tmprecordlist=record_list_contains(recordlist, &tmpnode->lt->record))!=NULL){
+                    record_list_append(tmprecordlist, &(tmpnode->lt->record));
+                }
+            }
+            tmpnode=tmpnode->next;
+        }
+    }
+    while (recordlist!=NULL) {
+        writeDB(&file,recordlist->record);
+        recordlist=recordlist->next;
+    }
+}

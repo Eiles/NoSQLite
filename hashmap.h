@@ -8,7 +8,7 @@
 
 #ifndef __NoSQLite__hashmap__
 #define __NoSQLite__hashmap__
-#define BUCKET_NUMBER 1000
+#define BUCKET_NUMBER 50
 
 #include <stdio.h>
 #include "list_value.h"
@@ -36,4 +36,13 @@ void hashmap_destroy(hashmap_t* hashmap);
 
 list_value_t* JSON_parse(char* string);
 
+int JSON_extract_key(char* string, char** keypointer);
+
+int JSON_extract_value(char* string, char** valuepointer);
+
+hashmap_t* hashmap_load(char * db);
+
+void hashmap_save(hashmap_t* hashmap,char* db);
+
+void hashmap_where(hashmap_node_t** result, char *string);
 #endif /* defined(__NoSQLite__hashmap__) */

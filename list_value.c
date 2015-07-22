@@ -92,12 +92,47 @@ void value_print_value(list_value_t* list){
     }
 }
 
+
+void value_write(FILE** filepointer,list_value_t* record){
+    if (record == NULL)
+        return;
+    FILE* file=*filepointer;
+    int intval;
+    double doubleval;
+    fprintf(file,"%s:",record->key);
+    switch (record->type) {
+        case INT_TYPE:
+            memcpy(&intval,record->value, sizeof(int));
+            fprintf(file,"%d", intval);
+            break;
+        case DOUBLE_TYPE:
+            memcpy(&doubleval,record->value, sizeof(double));
+            fprintf(file,"%lf", doubleval);
+            break;
+        case STRING_TYPE:
+            fprintf(file,"'%s'",record->value);
+            break;
+    }
+}
+void writeDB(FILE** filepointer,list_value_t* record){
+    FILE* file=*filepointer;
+    fprintf(file,"{");
+    while(record != NULL){
+        value_write(&file,record);
+        record=record->next;
+        if(record!=NULL)
+            fprintf(file,",");
+    }
+    fprintf(file,"}\n");
+}
+
 void list_print(list_value_t* list){
     printf("{ ");
     while(list != NULL){
         value_print(list);
         list=list->next;
-        printf(", ");
+        if(list!=NULL)
+            printf(", ");
     }
      printf("}");
 }

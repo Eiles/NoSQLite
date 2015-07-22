@@ -36,4 +36,10 @@ void list_print(list_value_t* list);
 void list_value_destroy(list_value_t* list);
 
 void value_print_value(list_value_t* list);
+
+void list_value_destroy_all(list_value_t* list);
+
+void writeDB(FILE** filepointer,list_value_t* record);
+
+void value_write(FILE** filepointer,list_value_t* record);
 #endif /* defined(__NoSQLite__list_value__) */
