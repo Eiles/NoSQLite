@@ -9,9 +9,47 @@
 #include "hashmap.h"
 #include "hashmap_node.h"
 
+//int value_compare(list_value_t* a, list_value_t* b){
+//    if(a->type==b->type)
+//        return compare(a,b);
+//    
+//    if(a->type==STRING_TYPE)
+//        return -1;
+//    else
+//        if (b->type==STRING_TYPE)
+//            return 1;
+//        else
+//            return (compare(a,b));
+//}
 
-uint32_t hashmap_hash(char* key)
-{
+//int compare(list_value_t* avalue, list_value_t* bvalue){
+//    if(avalue->type==STRING_TYPE)
+//        return strcmp(avalue->value,bvalue->value);
+//    
+//    if(a<b)
+//        return 1;
+//    else{
+//        if(a>b){
+//            return -1;
+//        }else{
+//            return 0;
+//        }
+//    }
+//}
+
+void char_to_double(char* value,void *toconvert){
+    double converted;
+    double* todouble;
+    memcpy(&converted, value, sizeof(double));
+    todouble=&converted;
+    toconvert=todouble;
+}
+
+//int char_to_int(){
+//    
+//}
+
+uint32_t hashmap_hash(char* key){
     size_t len = strlen(key);
     uint32_t hash = 0;
     uint32_t i = 0;
@@ -53,6 +91,45 @@ void hashmap_project(hashmap_node_t* result, char** argv, int argc){
     }
 }
 
+void hashmap_where(hashmap_node_t** result, char *string){
+    int i=0;
+    int found=0;
+    hashmap_node_t* prev=NULL;
+    hashmap_node_t* current=*result;
+    list_value_t* tmprec;
+    list_value_t* wheres=JSON_parse(string);
+    list_value_t* tmpw;
+    while (current!=NULL) {
+        tmpw=wheres;
+        while(tmpw!=NULL){
+            tmprec=current->lt->record;
+            while (tmprec!=NULL) {
+                if(strcmp(tmpw->key,tmprec->key)==0){ //&& value_compare(tmpw, tmprec)==0){
+                    found=1;
+                }
+                tmprec=tmprec->next;
+            }
+            tmpw=tmpw->next;
+        }
+        if(!found){
+            if (prev) {
+                prev->next=current->next;
+                free(current);
+                current=prev->next;
+            }
+            else{
+                *result=current->next;
+                free(current);
+                current=*result;
+                
+            }
+        }else{
+            prev=current;
+            current=current->next;
+        }
+        found=0;
+    }
+}
 
 hashmap_t* hashmap_create(){
     int i;
@@ -115,8 +192,7 @@ hashmap_node_t* hashmap_find(hashmap_t* hashmap,char *key){
     }
 }
 
-hashmap_node_t** hashmap_get(hashmap_t* map, char *key)
-{
+hashmap_node_t** hashmap_get(hashmap_t* map, char *key){
     hashmap_node_t** bucket = hashmap_get_bucket(map, hashmap_hash(key));
     return bucket;
 }
@@ -129,3 +205,153 @@ void hashmap_destroy(hashmap_t* hashmap){
         hashmap_node_destroy_with_values(node);
     }
 }
+
+list_value_t* JSON_parse(char *string){
+    char* toParse=NULL;
+    char** value=malloc(sizeof(char*));
+    char** key=malloc(sizeof(char*));
+    int type=0;
+    int i,j;
+    i=j=0;
+    int keylen=0;
+    int create=1;
+    list_value_t* list=NULL;
+    if(string[0] !='{' || string[strlen(string)-1] !='}'){
+        printf("JSON can't be parsed\n");
+        return NULL;
+    }
+    i++;
+    j++;
+    while(string[i]!='}'){
+        if(string[i]==','){
+            i++;
+            toParse=malloc(sizeof(char)*(i-j)+1);
+            strncpy(toParse,string+j,i-j-1);
+            toParse[i-j]='\0';
+            keylen=JSON_extract_key(toParse, key);
+            type=JSON_extract_value(toParse, value);
+            if(type==0){
+                goto error;
+            }else{
+                if(create){
+                    list=list_value_create(*key, *value, type);
+                    create=0;
+                }else{
+                    list_value_append(list, *key, *value, type);
+                }
+            }
+            j=i;
+        }
+        i++;
+    }
+    toParse=malloc(sizeof(char)*(strlen(string)-j)+1);
+    strncpy(toParse,string+j,strlen(string+j)-1);
+    toParse[strlen(string+j)]='\0';
+    keylen=JSON_extract_key(toParse, key);
+    type=JSON_extract_value(toParse, value);
+    if(type==0 || keylen==0){
+        goto error;
+    }else{
+        if(create){
+            list=list_value_create(*key, *value, type);
+            
+            create=0;
+        }else{
+            list_value_append(list, *key, *value, type);
+        }
+    }
+     return list;
+    
+error:
+    if(!create)
+        list_value_destroy_all(list);
+    free(*key);
+    free(*value);
+    free(toParse);
+    return NULL;
+    
+}
+
+void hashmap_add_list(hashmap_t* hashmap, list_value_t* lt){
+    hashmap_node_t* tmp_node;
+    while(lt!=NULL){
+        tmp_node = hashmap_node_create(hashmap_hash(lt->key), lt);
+        hashmap_set(hashmap, tmp_node);
+        lt=lt->next;
+    }
+    
+}
+
+int JSON_extract_key(char* string, char** keypointer){
+    int i=0;
+    while(string[i]!=':' && string[i]!='\0'){
+        i++;
+    }
+    if(string[i]=='\0'){
+        printf("JSON can't be parsed : Key not found\n");
+        *keypointer=NULL;
+        return -1;
+        
+    }
+    (*keypointer)=malloc(sizeof(char)*(i+1));
+    strncpy(*keypointer, string, i);
+    (*keypointer)[i]='\0';
+    return i;
+}
+
+int JSON_extract_value(char* string, char** valuepointer){
+    int i,j,k;
+    j=i=k=0;
+    int isdecimal=0;
+    int intvalue=0;
+    double dvalue=0;
+    while(string[i]!=':' && string[i]!='\0'){
+        i++;
+    }
+    if(string[i]=='\0'){
+        *valuepointer=NULL;
+        return -1;
+    }
+    i++;
+    j=i;
+    while(string[j]!='\0' && string[j]!='}' && string[j]!=','){
+        j++;
+    }
+    if(string[i] == '\'' || string[i] == '\"'){
+        if(string[i]!=string[j-1]){
+            printf("JSON can't be parsed : Incomplete string\n");
+            *valuepointer=NULL;
+            return -1;
+        }else{
+            (*valuepointer)=malloc(sizeof(char)*(j-i-1));
+            strncpy(*valuepointer, string+i+1, j-i-2);
+            (*valuepointer)[j]='\0';
+            return STRING_TYPE;
+        }
+        
+    }else{
+        for(k=i;k<strlen(string);k++){
+            if((string[k]<48 || string[k]>57)){
+                if(string[k]=='.'){
+                    isdecimal=1;
+                }else{
+                    printf("JSON can't be parsed : Stray char in number\n");
+                    *valuepointer=NULL;
+                    return -1;
+                }
+            }
+        }
+        if (isdecimal) {
+            dvalue=strtof(string+i,NULL);
+            (*valuepointer)=malloc(sizeof(dvalue));
+            memcpy((*valuepointer), &dvalue, sizeof(dvalue));
+            return DOUBLE_TYPE;
+        } else {
+            intvalue=atoi(string+i);
+            *valuepointer=malloc(sizeof(int));
+            memcpy(*valuepointer, &intvalue, sizeof(int));
+            return INT_TYPE;
+        }
+    }
+}
+

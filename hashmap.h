@@ -33,4 +33,7 @@ hashmap_node_t* hashmap_find(hashmap_t* hashmap,char *key);
 void hashmap_project(hashmap_node_t* result, char** argv, int argc);
 
 void hashmap_destroy(hashmap_t* hashmap);
+
+list_value_t* JSON_parse(char* string);
+
 #endif /* defined(__NoSQLite__hashmap__) */

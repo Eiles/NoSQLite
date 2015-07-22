@@ -113,3 +113,17 @@ void list_value_destroy(list_value_t* list){
         free(tmp);
         tmp=NULL;
 }
+
+void list_value_destroy_all(list_value_t* list)
+{
+    list_value_t* current = list;
+    list_value_t* next;
+    while (current != NULL) {
+        next = current->next;
+        free(current->key);
+        free(current->value);
+        free(current);
+        current = next;
+    }
+    list = NULL;
+}
